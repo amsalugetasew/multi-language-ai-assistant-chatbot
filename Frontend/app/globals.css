@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #8E288D;
+  --primary-dark: #701460;
+  --gold: #CFB53B;
+  --background: #ffffff;
+  --foreground: #0f172a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+
+.sidebar-bottom-button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 14px;
+  color: #64748b;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-bottom-button:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+/* =========================
+   CONVERSATION MENU
+========================= */
+
+.menu-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  text-align: left;
+  transition: background-color 0.2s ease;
+}
+
+.menu-item:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* =========================
+   MESSAGE ACTIONS
+========================= */
+
+.message-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 7px;
+  padding: 5px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  transition: background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.message-action:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.message-icon-action {
+  display: flex;
+  height: 28px;
+  width: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  font-size: 12px;
+  color: #64748b;
+  transition: background-color 0.2s ease;
+}
+
+.message-icon-action:hover {
+  background: #f1f5f9;
+}
+
+/* =========================
+   INPUT BUTTONS
+========================= */
+
+.input-icon-button {
+  display: flex;
+  height: 36px;
+  width: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: #94a3b8;
+  transition: background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.input-icon-button:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* =========================
+   TYPING INDICATOR
+========================= */
+
+.typing-dot {
+  height: 7px;
+  width: 7px;
+  border-radius: 999px;
+  background: #94a3b8;
+  animation: typing 1.2s infinite ease-in-out;
+}
+
+.animation-delay-150 {
+  animation-delay: 150ms;
+}
+
+.animation-delay-300 {
+  animation-delay: 300ms;
+}
+
+@keyframes typing {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+/* =========================
+   SCROLLBAR
+========================= */
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 768px) {
+  .message-action span {
+    display: none;
+  }
+}
