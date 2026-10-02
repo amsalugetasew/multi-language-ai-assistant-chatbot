@@ -10,11 +10,13 @@ class LLMService:
     def __init__(self):
         self.provider = settings.LLM_PROVIDER
         self.model = settings.LLM_MODEL
+        self.vision_model = settings.LLM_VISION_MODEL
 
     async def generate_response(
         self,
         message: str,
         language: str,
+        images: list[str] | None = None,
     ) -> str:
 
         # -------------------------------------------------
@@ -25,6 +27,7 @@ class LLMService:
             return self._mock_response(
                 message,
                 language,
+                images or [],
             )
 
         # -------------------------------------------------
@@ -47,6 +50,7 @@ class LLMService:
             return await self._generate_groq_response(
                 message,
                 language,
+                images or [],
             )
 
         raise ValueError(
@@ -61,6 +65,7 @@ class LLMService:
         self,
         message: str,
         language: str,
+        images: list[str],
     ) -> str:
 
         responses = {
@@ -146,6 +151,7 @@ class LLMService:
         self,
         message: str,
         language: str,
+        images: list[str],
     ) -> str:
 
         if not settings.LLM_API_KEY:
@@ -154,14 +160,26 @@ class LLMService:
         from groq import AsyncGroq
 
         client = AsyncGroq(api_key=settings.LLM_API_KEY)
+        user_content = [{"type": "text", "text": message}]
+        user_content.extend(
+            {
+                "type": "image_url",
+                "image_url": {"url": image},
+            }
+            for image in images
+        )
+
         completion = await client.chat.completions.create(
-            model=self.model,
+            model=self.vision_model if images else self.model,
             messages=[
                 {
                     "role": "system",
                     "content": get_language_instruction(language),
                 },
-                {"role": "user", "content": message},
+                {
+                    "role": "user",
+                    "content": user_content if images else message,
+                },
             ],
         )
         response = completion.choices[0].message.content

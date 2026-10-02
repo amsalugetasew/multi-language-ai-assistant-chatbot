@@ -1,12 +1,25 @@
 const STORAGE_KEY = "multi-language-ai-chat-conversations";
 
-export function getConversations() {
-  if (typeof window === "undefined") {
+function getStorageKey(userId) {
+  return `${STORAGE_KEY}:${userId}`;
+}
+
+export function getConversations(userId) {
+  if (typeof window === "undefined" || !userId) {
     return [];
   }
 
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const scopedKey = getStorageKey(userId);
+    let stored = localStorage.getItem(scopedKey);
+
+    if (!stored) {
+      stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        localStorage.setItem(scopedKey, stored);
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
 
     if (!stored) {
       return [];
@@ -19,14 +32,14 @@ export function getConversations() {
   }
 }
 
-export function saveConversations(conversations) {
-  if (typeof window === "undefined") {
+export function saveConversations(conversations, userId) {
+  if (typeof window === "undefined" || !userId) {
     return;
   }
 
   try {
     localStorage.setItem(
-      STORAGE_KEY,
+      getStorageKey(userId),
       JSON.stringify(conversations)
     );
   } catch (error) {
@@ -34,10 +47,10 @@ export function saveConversations(conversations) {
   }
 }
 
-export function clearStoredConversations() {
-  if (typeof window === "undefined") {
+export function clearStoredConversations(userId) {
+  if (typeof window === "undefined" || !userId) {
     return;
   }
 
-  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(getStorageKey(userId));
 }

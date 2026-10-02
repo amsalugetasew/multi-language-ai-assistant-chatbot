@@ -2,22 +2,31 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FiLock, FiMail, FiEye, FiEyeOff } from "react-icons/fi";
 
+import { loginUser } from "../../lib/api";
+
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    console.log("Login attempt:", {
-      email,
-      password,
-    });
-
-    // Later connect this to your authentication API
+    setError("");
+    setIsSubmitting(true);
+    try {
+      const { user } = await loginUser(email, password);
+      router.replace(user.must_change_password ? "/change-password" : "/dashboard");
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -26,19 +35,20 @@ export default function LoginPage() {
 
         {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <div
-            className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl text-white text-xl font-bold"
-            style={{ backgroundColor: "#8E288D" }}
-          >
-            AI
+          <div className="mx-auto mb-4 h-20 w-20 overflow-hidden rounded-2xl">
+            <img
+              src="/mizan.png"
+              alt="ሚዛን (Mizan) AI Assistant"
+              className="mx-auto mb-4 h-20 w-20 object-contain"
+            />
           </div>
 
           <h1 className="text-2xl font-bold text-gray-900">
-            Multi-Language AI Assistant
+            ሚዛን (Mizan) AI Assistant
           </h1>
 
           <p className="mt-2 text-sm text-gray-500">
-            Sign in to continue to your assistant
+            Sign in to continue to your workspace
           </p>
         </div>
 
@@ -89,37 +99,31 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword((value) => !value)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#8E288D]"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
               </div>
             </div>
 
-            {/* Forgot password */}
-            <div className="flex justify-end">
-              <button
-                type="button"
-                className="text-sm font-medium text-[#8E288D] hover:underline"
-              >
-                Forgot password?
-              </button>
-            </div>
+            {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
 
             {/* Login */}
             <button
               type="submit"
+              disabled={isSubmitting}
               className="w-full rounded-lg py-3 text-sm font-semibold text-white transition hover:opacity-90"
               style={{ backgroundColor: "#8E288D" }}
             >
-              Sign In
+              {isSubmitting ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
           {/* Register */}
           <p className="mt-6 text-center text-sm text-gray-500">
-            Don't have an account?{" "}
+            Need access? Register and wait for administrator activation.{" "}
             <Link
-              href="/profile"
+              href="/register"
               className="font-semibold text-[#8E288D] hover:underline"
             >
               Create profile

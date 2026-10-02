@@ -7,6 +7,7 @@ import ChatHeader from "@/components/ChatHeader";
 import ChatWindow from "@/components/ChatWindow";
 import ChatInput from "@/components/ChatInput";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import WorkspaceShell from "@/components/WorkspaceShell";
 
 import {
   createConversation,
@@ -16,12 +17,15 @@ import {
 import {
   getConversations,
   saveConversations,
+  clearStoredConversations,
 } from "../lib/storage";
 
 import { generateAIResponse } from "../lib/chat";
+import { getCurrentUser } from "../lib/api";
 
 export default function Home() {
   const [conversations, setConversations] = useState([]);
+  const [userId, setUserId] = useState(null);
   const [activeConversationId, setActiveConversationId] =
     useState(null);
 
@@ -39,14 +43,16 @@ export default function Home() {
   ========================= */
 
   useEffect(() => {
-    const saved = getConversations();
+    getCurrentUser().then(({ user }) => {
+      setUserId(user.id);
+      const saved = getConversations(user.id);
+      setConversations(saved);
 
-    setConversations(saved);
-
-    if (saved.length > 0) {
-      setActiveConversationId(saved[0].id);
-      setLanguage(saved[0].language || "English");
-    }
+      if (saved.length > 0) {
+        setActiveConversationId(saved[0].id);
+        setLanguage(saved[0].language || "English");
+      }
+    }).catch((error) => console.error("Could not load chat account:", error));
   }, []);
 
   /* =========================
@@ -54,10 +60,10 @@ export default function Home() {
   ========================= */
 
   useEffect(() => {
-    if (conversations.length > 0) {
-      saveConversations(conversations);
+    if (userId && conversations.length > 0) {
+      saveConversations(conversations, userId);
     }
-  }, [conversations]);
+  }, [conversations, userId]);
 
   /* =========================
      ACTIVE CONVERSATION
@@ -112,17 +118,20 @@ export default function Home() {
      SEND MESSAGE
   ========================= */
 
-  const handleSend = async () => {
+  const handleSend = async (attachments = []) => {
     const trimmed = input.trim();
+    const messageContent = trimmed || (
+      attachments.length ? "Please analyze the attached image." : ""
+    );
 
-    if (!trimmed || isTyping) return;
+    if (!messageContent || isTyping) return;
 
     let conversationId = activeConversationId;
 
     // Automatically create a chat if none exists.
     if (!conversationId) {
       const newConversation = createConversation({
-        title: trimmed.slice(0, 40),
+        title: messageContent.slice(0, 40),
         language,
       });
 
@@ -138,7 +147,8 @@ export default function Home() {
 
     const userMessage = createMessage({
       role: "user",
-      content: trimmed,
+      content: messageContent,
+      attachments,
     });
 
     setConversations((previous) =>
@@ -149,7 +159,7 @@ export default function Home() {
 
         const newTitle =
           conversation.messages.length === 0
-            ? trimmed.slice(0, 40)
+            ? messageContent.slice(0, 40)
             : conversation.title;
 
         return {
@@ -170,8 +180,9 @@ export default function Home() {
 
     try {
       const response = await generateAIResponse(
-        trimmed,
-        language
+        messageContent,
+        language,
+        attachments
       );
 
       const assistantMessage = createMessage({
@@ -200,8 +211,7 @@ export default function Home() {
 
       const errorMessage = createMessage({
         role: "assistant",
-        content:
-          "Sorry, something went wrong while generating the response.",
+        content: error.message || "The response failed. Please try again.",
       });
 
       setConversations((previous) =>
@@ -331,41 +341,101 @@ export default function Home() {
     setInput("");
     setDeleteAllOpen(false);
 
-    localStorage.removeItem(
-      "multi-language-ai-chat-conversations"
-    );
+    clearStoredConversations(userId);
   };
 
   /* =========================
      MESSAGE EDIT
   ========================= */
 
-  const handleEditMessage = (messageId, newContent) => {
-    if (!activeConversationId) return;
+  const handleEditMessage = async (messageId, newContent) => {
+    if (!activeConversationId || isTyping) return;
 
-    setConversations((previous) =>
-      previous.map((conversation) => {
-        if (
-          conversation.id !== activeConversationId
-        ) {
-          return conversation;
-        }
-
-        return {
-          ...conversation,
-          messages: conversation.messages.map(
-            (message) =>
-              message.id === messageId
-                ? {
-                    ...message,
-                    content: newContent,
-                  }
-                : message
-          ),
-          updatedAt: new Date().toISOString(),
-        };
-      })
+    const conversationId = activeConversationId;
+    const conversation = conversations.find(
+      (item) => item.id === conversationId
     );
+    const messageIndex = conversation?.messages.findIndex(
+      (message) => message.id === messageId
+    );
+
+    if (
+      !conversation ||
+      messageIndex === undefined ||
+      messageIndex < 0 ||
+      conversation.messages[messageIndex].role !== "user"
+    ) {
+      return;
+    }
+
+    const responseLanguage = conversation.language || language;
+    const editedMessages = conversation.messages
+      .slice(0, messageIndex + 1)
+      .map((message, index) =>
+        index === messageIndex
+          ? { ...message, content: newContent }
+          : message
+      );
+
+    setIsTyping(true);
+    setConversations((previous) =>
+      previous.map((item) =>
+        item.id === conversationId
+          ? {
+              ...item,
+              title:
+                messageIndex === 0
+                  ? newContent.slice(0, 40)
+                  : item.title,
+              messages: editedMessages,
+              updatedAt: new Date().toISOString(),
+            }
+          : item
+      )
+    );
+
+    try {
+      const response = await generateAIResponse(
+        newContent,
+        responseLanguage,
+        editedMessages[messageIndex].attachments
+      );
+      const assistantMessage = createMessage({
+        role: "assistant",
+        content: response,
+      });
+
+      setConversations((previous) =>
+        previous.map((item) =>
+          item.id === conversationId
+            ? {
+                ...item,
+                messages: [...item.messages, assistantMessage],
+                updatedAt: new Date().toISOString(),
+              }
+            : item
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      const errorMessage = createMessage({
+        role: "assistant",
+        content: error.message || "The response failed. Please try again.",
+      });
+
+      setConversations((previous) =>
+        previous.map((item) =>
+          item.id === conversationId
+            ? {
+                ...item,
+                messages: [...item.messages, errorMessage],
+              }
+            : item
+        )
+      );
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   /* =========================
@@ -401,7 +471,8 @@ export default function Home() {
     try {
       const response = await generateAIResponse(
         previousUserMessage.content,
-        language
+        language,
+        previousUserMessage.attachments
       );
 
       setConversations((previous) =>
@@ -423,6 +494,25 @@ export default function Home() {
             updatedAt: new Date().toISOString(),
           };
         })
+      );
+    } catch (error) {
+      console.error(error);
+      setConversations((previous) =>
+        previous.map((item) =>
+          item.id === activeConversationId
+            ? {
+                ...item,
+                messages: item.messages.map((message) =>
+                  message.id === assistantMessage.id
+                    ? {
+                        ...message,
+                        content: error.message || "The response failed. Please try again.",
+                      }
+                    : message
+                ),
+              }
+            : item
+        )
       );
     } finally {
       setIsTyping(false);
@@ -499,7 +589,8 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-white text-slate-900">
+    <WorkspaceShell>
+    <div className="flex h-[calc(100dvh-4rem)] overflow-hidden bg-white text-slate-900">
       {/* Sidebar */}
       <ChatSidebar
         conversations={conversations}
@@ -541,6 +632,11 @@ export default function Home() {
           language={language}
           isTyping={isTyping}
           onStop={handleStop}
+          onTranscript={(transcript) =>
+            setInput((current) =>
+              [current.trim(), transcript].filter(Boolean).join(" ")
+            )
+          }
         />
       </main>
 
@@ -564,5 +660,6 @@ export default function Home() {
         onCancel={() => setDeleteAllOpen(false)}
       />
     </div>
+    </WorkspaceShell>
   );
 }

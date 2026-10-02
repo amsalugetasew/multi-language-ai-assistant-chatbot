@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { FiUser, FiCpu, FiCheck } from "react-icons/fi";
-import MessageActions from "./MessageActions";
+import Image from "next/image";
+import { FiUser, FiCpu, FiCheck, FiCopy } from "react-icons/fi";
 
 export default function MessageBubble({
   message,
@@ -98,6 +98,21 @@ export default function MessageBubble({
                 : "rounded-bl-md border border-gray-200 bg-white text-gray-800 shadow-sm"
             }`}
           >
+            {message.attachments?.length > 0 && (
+              <div className="mb-2 flex flex-wrap gap-2">
+                {message.attachments.map((attachment, index) => (
+                  <Image
+                    key={`${attachment.name}-${index}`}
+                    src={attachment.dataUrl}
+                    alt={`Attached image: ${attachment.name}`}
+                    width={attachment.width || 1280}
+                    height={attachment.height || 1280}
+                    unoptimized
+                    className="h-auto max-h-64 w-auto max-w-full rounded-md object-contain"
+                  />
+                ))}
+              </div>
+            )}
             <div className="whitespace-pre-wrap">
               {message.content}
             </div>
@@ -107,16 +122,17 @@ export default function MessageBubble({
         {/* Actions */}
         {!isEditing && (
           <div
-            className={`mt-1 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 ${
+            className={`mt-1 flex items-center gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 ${
               isUser ? "justify-end" : "justify-start"
             }`}
           >
             <button
               onClick={handleCopy}
               className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-[#8E288D]"
-              title="Copy"
+              title={copied ? "Copied" : "Copy response"}
+              aria-label={copied ? "Copied" : "Copy response"}
             >
-              {copied ? <FiCheck size={14} /> : "⧉"}
+              {copied ? <FiCheck size={14} /> : <FiCopy size={14} />}
             </button>
 
             {isUser && (

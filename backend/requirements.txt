@@ -6,6 +6,8 @@ pydantic-settings
 sqlalchemy
 oracledb
 psycopg
+pymysql
+sqlglot
 openai
 groq
 httpx

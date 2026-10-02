@@ -47,7 +47,7 @@ export default function ChatSidebar({
   return (
     <aside className="flex w-[280px] shrink-0 flex-col border-r border-slate-200 bg-[#f8f8fa]">
       {/* Brand */}
-      <div className="flex h-16 items-center gap-3 border-b border-slate-200 px-4">
+      {/* <div className="flex h-16 items-center gap-3 border-b border-slate-200 px-4">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#8E288D] text-sm font-bold text-white shadow-sm">
           AI
         </div>
@@ -60,7 +60,7 @@ export default function ChatSidebar({
             Multi-Language
           </p>
         </div>
-      </div>
+      </div> */}
 
       {/* New chat */}
       <div className="p-3">

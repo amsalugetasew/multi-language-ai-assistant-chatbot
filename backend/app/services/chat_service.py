@@ -8,12 +8,14 @@ class ChatService:
         message: str,
         language: str,
         conversation_id: str | None = None,
+        images: list[str] | None = None,
     ):
 
         # Generate AI response
         response = await llm_service.generate_response(
             message=message,
             language=language,
+            images=images,
         )
 
         return {

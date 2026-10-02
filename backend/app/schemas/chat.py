@@ -24,6 +24,23 @@ class ChatRequest(BaseModel):
 
     conversation_id: str | None = None
 
+    images: list[str] = Field(default_factory=list, max_length=3)
+
+    @field_validator("images")
+    @classmethod
+    def validate_images(cls, images: list[str]) -> list[str]:
+        allowed_prefixes = (
+            "data:image/jpeg;base64,",
+            "data:image/png;base64,",
+            "data:image/webp;base64,",
+        )
+        for image in images:
+            if not image.startswith(allowed_prefixes):
+                raise ValueError("Images must be JPEG, PNG, or WebP data URLs.")
+            if len(image) > 6_000_000:
+                raise ValueError("Each image must be smaller than 4.5 MB.")
+        return images
+
 
 class ChatResponse(BaseModel):
     success: bool = True

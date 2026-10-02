@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 import MessageBubble from "./MessageBubble";
 
 const suggestions = [
@@ -34,8 +36,21 @@ export default function ChatWindow({
   onRegenerate,
   onFeedback,
 }) {
+  const scrollAreaRef = useRef(null);
+  const lastMessage = messages[messages.length - 1];
+
+  useEffect(() => {
+    const scrollArea = scrollAreaRef.current;
+    if (!scrollArea) return;
+
+    scrollArea.scrollTo({
+      top: scrollArea.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [isTyping, messages.length, lastMessage?.id, lastMessage?.content]);
+
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div ref={scrollAreaRef} className="flex-1 overflow-y-auto">
       {messages.length === 0 ? (
         <WelcomeScreen
           language={language}

@@ -54,5 +54,28 @@ class Settings:
         "openai/gpt-oss-20b",
     )
 
+    LLM_VISION_MODEL: str = os.getenv(
+        "LLM_VISION_MODEL",
+        "qwen/qwen3.8-27b",
+    )
+
+    LLM_TRANSCRIPTION_MODEL: str = os.getenv(
+        "LLM_TRANSCRIPTION_MODEL",
+        "whisper-large-v3-turbo",
+    )
+
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+
+    AUTH_JWT_SECRET: str = os.getenv("AUTH_JWT_SECRET", "")
+
+    AUTH_TOKEN_TTL_MINUTES: int = int(
+        os.getenv("AUTH_TOKEN_TTL_MINUTES", "480")
+    )
+
+    AUTH_COOKIE_SECURE: bool = os.getenv(
+        "AUTH_COOKIE_SECURE",
+        "false",
+    ).lower() == "true"
+
 
 settings = Settings()

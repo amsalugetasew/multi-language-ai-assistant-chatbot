@@ -9,6 +9,7 @@ import {
   FiMessageSquare,
   FiTrash2,
 } from "react-icons/fi";
+import WorkspaceShell from "../../components/WorkspaceShell";
 
 export default function SettingsPage() {
   const [darkMode, setDarkMode] = useState(false);
@@ -16,6 +17,7 @@ export default function SettingsPage() {
   const [language, setLanguage] = useState("English");
 
   return (
+    <WorkspaceShell>
     <main className="min-h-screen bg-gray-50 px-6 py-8">
       <div className="mx-auto max-w-4xl">
 
@@ -182,5 +184,6 @@ export default function SettingsPage() {
         </div>
       </div>
     </main>
+    </WorkspaceShell>
   );
 }

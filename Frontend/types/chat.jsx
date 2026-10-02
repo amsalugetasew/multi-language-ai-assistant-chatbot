@@ -1,11 +1,13 @@
 export const createMessage = ({
   role,
   content,
+  attachments = [],
   id = crypto.randomUUID(),
 }) => ({
   id,
   role,
   content,
+  attachments,
   createdAt: new Date().toISOString(),
   feedback: null,
 });

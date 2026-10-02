@@ -4,6 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes.chat import router as chat_router
 from app.api.routes.conversations import router as conversations_router
 from app.api.routes.health import router as health_router
+from app.api.routes.auth import router as auth_router
+from app.api.routes.users import router as users_router
+from app.api.routes.transactions import router as transactions_router
+from app.api.routes.data import router as data_router
 from app.core.config import settings
 
 
@@ -50,6 +54,11 @@ app.include_router(
     prefix="/api",
     tags=["Conversations"],
 )
+
+app.include_router(auth_router, prefix="/api", tags=["Authentication"])
+app.include_router(users_router, prefix="/api", tags=["Users"])
+app.include_router(transactions_router, prefix="/api", tags=["Transactions"])
+app.include_router(data_router, prefix="/api", tags=["AI Data Query"])
 
 
 @app.get("/")
